@@ -51,9 +51,8 @@ class Tshark(Application):
         debug("[{0}] Starting tshark logging\n".format(self.node.name))
 
         if self.singleLogFile:
-            interfaces = ["-i " + intf for intf in self.node.intfNames()]
-            ndnDumpOutputFile = "{}/{}-interfaces.pcap".format(self.logFolder, self.node.name)
-            self.node.cmd("tshark {} -w {} -q &".format(" ".join(interfaces), ndnDumpOutputFile))
+            ndnDumpOutputFile = "{}{}-interfaces.pcap".format(self.logFolder, self.node.name)
+            Application.start(self, "tshark -i any -w {}".format(ndnDumpOutputFile), logfile=self.logFolder + 'shark.log')
         else:
             for intf in self.node.intfNames():
                 ndnDumpOutputFile = "{}/{}.pcap".format(self.logFolder, intf)
