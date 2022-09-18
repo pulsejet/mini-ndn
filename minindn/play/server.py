@@ -39,7 +39,8 @@ import termios
 AUTH_TOKEN = None
 AUTH_FILE = "/tmp/minindn-auth"
 PLAY_URL = "https://play.ndn.today"
-SERVER_HOST = "127.0.0.1"
+SERVER_HOST = "0.0.0.0"
+SERVER_HOST_URL = "127.0.0.1"
 SERVER_PORT = 8765
 PCAP_CHUNK_SIZE = 512
 
@@ -513,7 +514,7 @@ def _start_background_loop(loop: asyncio.AbstractEventLoop) -> None:
     c_loop = loop
 
     # Show the URL to the user
-    ws_url = "ws://{}:{}".format(SERVER_HOST, SERVER_PORT)
+    ws_url = "ws://{}:{}".format(SERVER_HOST_URL, SERVER_PORT)
     ws_url_q = urllib.parse.quote(ws_url.encode('utf8'))
     full_url = "{}/?minindn={}&auth={}".format(PLAY_URL, ws_url_q, AUTH_TOKEN)
     print('Open NDN Play GUI at {}'.format(full_url))

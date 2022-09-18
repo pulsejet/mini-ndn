@@ -4,8 +4,8 @@ FROM ubuntu:20.04
 # Set the working directory to /
 WORKDIR /
 
-# expose ports for openvswitch-switch
-EXPOSE 6633 6653 6640
+# expose ports for openvswitch-switch and play
+EXPOSE 6633 6653 6640 8765
 
 # Update container image
 RUN apt-get update -y && \
@@ -25,7 +25,7 @@ COPY . /mini-ndn
 
 RUN cd mini-ndn && \
     pip3 install -r requirements.txt && \
-    ./install.sh -y --ppa && cd /
+    ./install.sh -y --source && cd /
 
 RUN rm -rf /var/lib/apt/lists/*
 
