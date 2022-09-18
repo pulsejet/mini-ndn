@@ -4,8 +4,8 @@ FROM ubuntu:22.04
 # Set the working directory to /
 WORKDIR /
 
-# expose ports for openvswitch-switch
-EXPOSE 6633 6653 6640
+# expose ports for openvswitch-switch and play
+EXPOSE 6633 6653 6640 8765
 
 # Update container image
 RUN apt-get update -y && \
