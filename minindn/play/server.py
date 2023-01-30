@@ -35,6 +35,13 @@ import fcntl
 import struct
 import termios
 
+# Mininet Wifi
+try:
+    import mn_wifi
+    HAS_WIFI = True
+except ImportError:
+    HAS_WIFI = False
+
 # Constants
 AUTH_TOKEN = None
 AUTH_FILE = "/tmp/minindn-auth"
@@ -136,7 +143,9 @@ def _is_valid_hostid(nodeId: str):
     """Check if a nodeId is a host"""
     if nodeId not in ndn_net:
         return False
-    if not isinstance(ndn_net[nodeId], mininet.node.Host):
+
+    if not isinstance(ndn_net[nodeId], mininet.node.Host) and \
+       (HAS_WIFI and not isinstance(ndn_net[nodeId], mn_wifi.node.Station)):
         return False
     return True
 
@@ -191,7 +200,13 @@ async def get_topo():
     nodes = []
     links = []
 
-    for host in ndn_net.hosts:
+    hosts = ndn_net.hosts
+    if hasattr(ndn_net, 'stations'):
+        hosts += ndn_net.stations
+    if hasattr(ndn_net, 'cars'):
+        hosts += ndn_net.cars
+
+    for host in hosts:
         nodes.append({
             'id': host.name,
             'label': host.name,
@@ -205,6 +220,12 @@ async def get_topo():
         })
 
     for link in ndn_net.links:
+        if isinstance(link.intf2, str):
+            if link.intf2 == 'wifiAdhoc':
+                # TODO: visualize adhoc links
+                pass
+            continue
+
         obj = {
             'mnId': str(link),
             'from': link.intf1.node.name,
