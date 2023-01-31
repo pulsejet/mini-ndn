@@ -56,7 +56,7 @@ class Pty:
 
         os.close(self.master)
         os.close(self.slave)
-        del self.executor.pty_list[id]
+        del self.executor.pty_list[self.id]
 
     def start(self):
         self.executor.pty_list[self.id] = self
