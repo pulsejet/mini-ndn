@@ -200,7 +200,7 @@ async def get_topo():
     nodes = []
     links = []
 
-    hosts = ndn_net.hosts
+    hosts = ndn_net.hosts.copy()
     if hasattr(ndn_net, 'stations'):
         hosts += ndn_net.stations
     if hasattr(ndn_net, 'cars'):
