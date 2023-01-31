@@ -27,7 +27,7 @@ from minindn.minindn import Minindn
 from minindn.apps.app_manager import AppManager
 from minindn.apps.nfd import Nfd
 from minindn.apps.tshark import Tshark
-from minindn.play.server import StartPlayServer
+from minindn.play.server import PlayServer
 
 if __name__ == '__main__':
     setLogLevel('info')
@@ -49,6 +49,6 @@ if __name__ == '__main__':
     # This should print a URL you can open to connect to NDN-Play
     # Port 8765 must be forwarded from the host running MiniNDN
     # to the machine running the browser
-    StartPlayServer(ndn.net)
+    PlayServer(ndn.net)
 
     ndn.stop()

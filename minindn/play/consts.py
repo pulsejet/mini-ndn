@@ -1,5 +1,13 @@
 from enum import Enum
 
+class Config:
+    AUTH_FILE = "/tmp/minindn-auth"
+    PLAY_URL = "http://localhost:4200"
+    SERVER_HOST = "0.0.0.0"
+    SERVER_HOST_URL = "127.0.0.1"
+    SERVER_PORT = 8765
+    PCAP_CHUNK_SIZE = 512
+
 # MessagePack Keys
 class WSKeys(str, Enum):
     MSG_KEY_FUN = 'F'
