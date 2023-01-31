@@ -13,49 +13,20 @@ class TopoExecutor:
         nodes = []
         links = []
 
-        hosts = self.net.hosts.copy()
-        if hasattr(self.net, 'stations'):
-            hosts += self.net.stations
-        if hasattr(self.net, 'cars'):
-            hosts += self.net.cars
-
-        for host in hosts:
-            nodes.append({
-                'id': host.name,
-                'label': host.name,
-            })
+        for host in self.net.hosts:
+            nodes.append(self._node_dict(host))
 
         for switch in self.net.switches:
-            nodes.append({
-                'id': switch.name,
-                'label': switch.name,
-                'isSwitch': True,
-            })
+            nodes.append(self._node_dict(switch, switch=True))
+
+        if hasattr(self.net, 'stations'):
+            for station in self.net.stations:
+                nodes.append(self._node_dict(station))
 
         for link in self.net.links:
-            if isinstance(link.intf2, str):
-                if link.intf2 == 'wifiAdhoc':
-                    # TODO: visualize adhoc links
-                    pass
-                continue
-
-            obj = {
-                'mnId': str(link),
-                'from': link.intf1.node.name,
-                'to': link.intf2.node.name,
-            }
-
-            if 'delay' in link.intf1.params:
-                d1 = int(link.intf1.params['delay'][:-len('ms')])
-                d2 = int(link.intf2.params['delay'][:-len('ms')])
-                obj['latency'] = (d1 + d2) / 2
-
-            if 'loss' in link.intf1.params:
-                l1 = link.intf1.params['loss']
-                l2 = link.intf2.params['loss']
-                obj['loss'] = (l1 + l2) / 2
-
-            links.append(obj)
+            obj = self._link_dict(link)
+            if obj:
+                links.append(obj)
 
         return {
             'nodes': nodes,
@@ -114,6 +85,40 @@ class TopoExecutor:
         self.net.configHosts()
         info('Removed node {}\n'.format(id))
         return True
+
+    def _node_dict(self, node, switch=False):
+        val = {
+            'id': node.name,
+            'label': node.name,
+        }
+        if switch:
+            val['isSwitch'] = True
+        return val
+
+    def _link_dict(self, link):
+        if isinstance(link.intf2, str):
+            if link.intf2 == 'wifiAdhoc':
+                # TODO: visualize adhoc links
+                pass
+            return None
+
+        obj = {
+            'mnId': str(link),
+            'from': link.intf1.node.name,
+            'to': link.intf2.node.name,
+        }
+
+        if 'delay' in link.intf1.params:
+            d1 = int(link.intf1.params['delay'][:-len('ms')])
+            d2 = int(link.intf2.params['delay'][:-len('ms')])
+            obj['latency'] = (d1 + d2) / 2
+
+        if 'loss' in link.intf1.params:
+            l1 = link.intf1.params['loss']
+            l2 = link.intf2.params['loss']
+            obj['loss'] = (l1 + l2) / 2
+
+        return obj
 
     def _get_link(self, a, b, mnId) -> Link:
         """Helper: get link between two nodes by name"""
