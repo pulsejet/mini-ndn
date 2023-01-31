@@ -1,86 +1,21 @@
 import os
-import subprocess
-import select
 import logging
 import msgpack
-import pty
 import typing
 import fcntl
 import struct
 import termios
 import random
 
-from io import TextIOWrapper
-from threading import Thread
-
 from mininet.net import Mininet
 from mininet.cli import CLI
-from minindn.play.cbuf import CircularByteBuffer
 from minindn.play.consts import WSKeys, WSFunctions
 from minindn.play.socket import PlaySocket
+from minindn.play.term.pty import Pty
 from minindn.util import getPopen
 import minindn.play.util as util
 
-class Pty:
-    id: str
-    name: str
-    master: int
-    stdin: TextIOWrapper
-    thread: Thread
-    slave: int
-    process: subprocess.Popen = None
-    buffer: CircularByteBuffer
-
-    def __init__(self):
-        self.master, self.slave = pty.openpty()
-        self.buffer = CircularByteBuffer(16000)
-
-    # Send output to UI thread
-    @staticmethod
-    def ui_out_pty_thread(
-        executor,
-        id: str, master: int, slave: int,
-        proc: subprocess.Popen, buffer: CircularByteBuffer,
-    ):
-        poller = select.poll()
-        poller.register(master, select.POLLIN)
-        while not proc or proc.poll() is None:
-            if poller.poll(0):
-                bytes: bytearray = None
-                while poller.poll(1):
-                    if not bytes:
-                        bytes = bytearray()
-                    if len(bytes) >= 4000: # safe MTU
-                        break
-
-                    try:
-                        read_bytes = os.read(master, 1)
-                        bytes.append(read_bytes[0])
-                    except OSError:
-                        break
-
-                if bytes:
-                    executor._send_pty_out(bytes, id)
-                    buffer.write(bytes)
-
-        executor.socket.send_all(msgpack.dumps({
-            WSKeys.MSG_KEY_FUN: WSFunctions.CLOSE_TERMINAL,
-            WSKeys.MSG_KEY_ID: id,
-        }))
-
-        os.close(master)
-        os.close(slave)
-        del executor.pty_list[id]
-
-    def start(self, executor):
-        executor.pty_list[self.id] = self
-        self.stdin = os.fdopen(self.master, 'wb')
-        self.thread = Thread(target=Pty.ui_out_pty_thread,
-                             args=(executor, self.id, self.master, self.slave, self.process, self.buffer),
-                             daemon=True)
-        self.thread.start()
-
-class PtyExecutor:
+class TermExecutor:
     net: Mininet = None
     pty_list: typing.Dict[str, Pty] = {}
     socket: PlaySocket = None
@@ -93,7 +28,7 @@ class PtyExecutor:
         """UI Function: Start CLI"""
         # Send logs to UI
         class WsCliHandler():
-            parent: PtyExecutor = None
+            parent: TermExecutor = None
 
             def __init__(self, parent):
                 self.parent = parent
@@ -109,10 +44,10 @@ class PtyExecutor:
         lg.addHandler(handler)
 
         # Create pty for cli
-        cpty = Pty()
+        cpty = Pty(self)
         cpty.id = "cli"
         cpty.name = "MiniNDN CLI"
-        cpty.start(self)
+        cpty.start()
 
         # Start cli
         CLI.use_rawinput = False
@@ -132,7 +67,7 @@ class PtyExecutor:
         if not util.is_valid_hostid(self.net, nodeId):
             return
 
-        cpty = Pty()
+        cpty = Pty(self)
         cpty.process = getPopen(
             self.net[nodeId], 'bash --login --noprofile',
             envDict={"PS1": "\\u@{}:\\w\\$ ".format(nodeId)},
@@ -140,7 +75,7 @@ class PtyExecutor:
 
         cpty.id = nodeId + str(int(random.random() * 100000))
         cpty.name = "bash [{}]".format(nodeId)
-        cpty.start(self)
+        cpty.start()
 
         return self._open_term_response(cpty)
 

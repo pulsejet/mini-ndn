@@ -1,8 +1,8 @@
 from minindn.play.socket import PlaySocket
-from minindn.play.topo import TopoExecutor
-from minindn.play.pty import PtyExecutor
-from minindn.play.state import StateExecutor
-from minindn.play.shark import SharkExecutor
+from minindn.play.net.topo import TopoExecutor
+from minindn.play.net.state import StateExecutor
+from minindn.play.term.term import TermExecutor
+from minindn.play.shark.shark import SharkExecutor
 from mininet.net import Mininet
 
 class PlayServer:
@@ -23,7 +23,7 @@ class PlayServer:
         shark_executor = SharkExecutor(net, self.socket)
         self.socket.add_executor(shark_executor)
 
-        pty_executor = PtyExecutor(net, self.socket)
+        pty_executor = TermExecutor(net, self.socket)
         self.socket.add_executor(pty_executor)
 
         if cli:
