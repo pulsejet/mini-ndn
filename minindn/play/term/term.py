@@ -8,6 +8,9 @@ import termios
 import random
 import shutil
 
+from contextlib import redirect_stdout, redirect_stderr
+from code import InteractiveConsole
+
 from mininet.net import Mininet
 from mininet.cli import CLI
 from minindn.play.consts import WSKeys, WSFunctions
@@ -53,6 +56,27 @@ class TermExecutor:
         # Start cli
         CLI.use_rawinput = False
         CLI(self.net, stdin=os.fdopen(cpty.slave, 'r'), stdout=os.fdopen(cpty.slave, 'w'))
+
+    def start_repl(self):
+        """UI Function: Start REPL"""
+
+        cpty = Pty(self)
+        cpty.id = "repl"
+        cpty.name = "Python REPL"
+        cpty.start()
+
+        try:
+            with os.fdopen(cpty.slave, 'w') as fout, os.fdopen(cpty.slave, 'r') as fin, redirect_stdout(fout), redirect_stderr(fout):
+                def raw_input(prompt="") -> str:
+                    print(prompt, end="", flush=True)
+                    return fin.readline()
+                repl = InteractiveConsole({
+                    "net": self.net,
+                })
+                repl.raw_input = raw_input
+                repl.interact(None, None)
+        except OSError:
+            pass
 
     async def open_all_ptys(self):
         """UI Function: Open all ptys currently active"""
