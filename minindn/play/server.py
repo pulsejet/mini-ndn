@@ -184,7 +184,11 @@ def _get_ip_map():
     """Get IP address map for all links in net"""
     addresses = {}
     def addIntf(intf):
+        if isinstance(intf, str):
+            # TODO: maybe "wifiAdhoc"; what then?
+            return
         addresses[intf.ip] = intf.node.name
+
     for link in ndn_net.links:
         addIntf(link.intf1)
         addIntf(link.intf2)
