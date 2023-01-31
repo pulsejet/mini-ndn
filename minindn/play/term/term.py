@@ -6,6 +6,7 @@ import fcntl
 import struct
 import termios
 import random
+import shutil
 
 from mininet.net import Mininet
 from mininet.cli import CLI
@@ -67,10 +68,22 @@ class TermExecutor:
         if not util.is_valid_hostid(self.net, nodeId):
             return
 
+        # Copy .bashrc to node
+        path = os.path.expanduser("~/.bashrc")
+        if os.path.isfile(path):
+            # Do this copy every time to make sure the file is up to date
+            target = util.host_home(self.net[nodeId]) + "/.bashrc"
+            shutil.copy(path, target)
+
+            # Append extra commands
+            with open(target, "a") as f:
+                # Shell prompt
+                f.write("\nexport PS1='\\[\\033[01;32m\\]\\u@{}\\[\\033[00m\\]:\\[\\033[01;34m\]\\w\\[\\033[00m\\]\\$ '\n".format(nodeId))
+
+        # Create pty
         cpty = Pty(self)
         cpty.process = getPopen(
-            self.net[nodeId], 'bash --login --noprofile',
-            envDict={"PS1": "\\u@{}:\\w\\$ ".format(nodeId)},
+            self.net[nodeId], 'bash --noprofile -i',
             stdin=cpty.slave, stdout=cpty.slave, stderr=cpty.slave)
 
         cpty.id = nodeId + str(int(random.random() * 100000))
