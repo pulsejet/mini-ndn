@@ -1,3 +1,5 @@
+import msgpack
+
 from pathlib import Path
 from threading import Thread
 
@@ -6,8 +8,6 @@ from mininet.log import error
 from minindn.play.socket import PlaySocket
 from minindn.play.consts import Config, WSFunctions, WSKeys
 import minindn.play.util as util
-
-import msgpack
 
 # TShark fields
 SHARK_FIELDS = [

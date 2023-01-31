@@ -1,8 +1,8 @@
+import mininet
+import subprocess
+
 from mininet.net import Mininet
 from minindn.util import getPopen
-import mininet
-
-import subprocess
 
 try:
     import mn_wifi

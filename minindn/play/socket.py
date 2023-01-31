@@ -23,11 +23,8 @@ class PlaySocket:
         """
 
         self._set_auth_token()
-
-        # Start loop thread
         self.loop = asyncio.new_event_loop()
-        t = Thread(target=self._run, args=(), daemon=True)
-        t.start()
+        Thread(target=self._run, args=(), daemon=True).start()
 
     def add_executor(self, executor):
         self.executors.append(executor)
@@ -46,6 +43,8 @@ class PlaySocket:
                 del self.conn_list[websocket]
 
     def _set_auth_token(self):
+        """Create auth token if it doesn't exist."""
+
         # Perist auth token so you don't need to refresh every time
         # Check if AUTH_FILE was modified less than a day ago
         if os.path.exists(Config.AUTH_FILE) and time.time() - os.path.getmtime(Config.AUTH_FILE) < 24 * 60 * 60:
@@ -74,6 +73,7 @@ class PlaySocket:
 
     async def _serve(self, websocket, path):
         """Handle websocket connection"""
+
         try:
             auth = urllib.parse.parse_qs(urllib.parse.urlparse(path).query)['auth'][0]
             if auth != self.AUTH_TOKEN:
