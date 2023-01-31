@@ -2,7 +2,7 @@ from enum import Enum
 
 class Config:
     AUTH_FILE = "/tmp/minindn-auth"
-    PLAY_URL = "http://localhost:4200"
+    PLAY_URL = "https://play.ndn.today"
     SERVER_HOST = "0.0.0.0"
     SERVER_HOST_URL = "127.0.0.1"
     SERVER_PORT = 8765
