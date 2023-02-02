@@ -91,8 +91,15 @@ class TopoExecutor:
             'id': node.name,
             'label': node.name,
         }
+
         if switch:
             val['isSwitch'] = True
+
+        if getattr(node, 'params') and 'params' in node.params:
+            p = node.params['params']
+            if 'color' in p:
+                val['color'] = p['color']
+
         return val
 
     def _link_dict(self, link):
