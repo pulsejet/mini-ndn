@@ -95,7 +95,12 @@ class TopoExecutor:
         if switch:
             val['isSwitch'] = True
 
-        if getattr(node, 'params') and 'params' in node.params:
+        # position
+        if hasattr(node, 'position'):
+            val['x'] = node.position[0]
+            val['y'] = node.position[1]
+
+        if hasattr(node, 'params') and 'params' in node.params:
             p = node.params['params']
             if 'color' in p:
                 val['color'] = p['color']
