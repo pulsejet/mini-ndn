@@ -86,6 +86,17 @@ class TopoExecutor:
         info('Removed node {}\n'.format(id))
         return True
 
+    async def set_node_pos(self, id, x, y):
+        """UI Function: Set node position"""
+        node = self.net[id]
+        if not node or not hasattr(node, 'position'):
+            return False
+        x, y = x / 10, y / 10
+        z = node.position[2] if len(node.position) > 2 else 0
+        node.setPosition("%d,%d,%d" % (x, y, z))
+        info('Set position of {} to {},{}\n'.format(id, x, y))
+        return True
+
     def _node_dict(self, node, switch=False):
         val = {
             'id': node.name,
@@ -95,10 +106,10 @@ class TopoExecutor:
         if switch:
             val['isSwitch'] = True
 
-        # position
         if hasattr(node, 'position'):
-            val['x'] = node.position[0]
-            val['y'] = node.position[1]
+            # MiniNDN positions are in m, NDN-Play are much smaller
+            val['x'] = node.position[0] * 10
+            val['y'] = node.position[1] * 10
 
         if hasattr(node, 'params') and 'params' in node.params:
             p = node.params['params']
