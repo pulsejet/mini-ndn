@@ -45,6 +45,11 @@ if __name__ == '__main__':
     info('Starting TShark on nodes\n')
     sharks = AppManager(ndn, ndn.net.hosts, Tshark, singleLogFile=True)
 
+    ndn.initParams(ndn.net.hosts)
+
+    # Set the color of a node
+    ndn.net.hosts[0].params['params']['color'] = "orange"
+
     # Starts the MiniNDN NDN-Play server
     # This should print a URL you can open to connect to NDN-Play
     # Port 8765 must be forwarded from the host running MiniNDN
