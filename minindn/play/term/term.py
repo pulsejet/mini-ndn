@@ -1,7 +1,6 @@
 import os
 import logging
 import msgpack
-import typing
 import fcntl
 import struct
 import termios
@@ -20,9 +19,7 @@ from minindn.util import getPopen
 import minindn.play.util as util
 
 class TermExecutor:
-    net: Mininet = None
-    pty_list: typing.Dict[str, Pty] = {}
-    socket: PlaySocket = None
+    pty_list: dict[str, Pty] = {}
 
     def __init__(self, net: Mininet, socket: PlaySocket):
         self.net = net
@@ -32,9 +29,7 @@ class TermExecutor:
         """UI Function: Start CLI"""
         # Send logs to UI
         class WsCliHandler():
-            parent: TermExecutor = None
-
-            def __init__(self, parent):
+            def __init__(self, parent: TermExecutor):
                 self.parent = parent
 
             def write(self, msg: str):

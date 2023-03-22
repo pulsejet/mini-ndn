@@ -31,3 +31,4 @@ class WSFunctions(str, Enum):
     PTY_RESIZE = 'pty_resize'
     OPEN_TERMINAL = 'open_term'
     CLOSE_TERMINAL = 'close_term'
+    MONITOR_COUNTS = 'monitor_counts'

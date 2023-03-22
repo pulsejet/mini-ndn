@@ -54,6 +54,6 @@ if __name__ == '__main__':
     # This should print a URL you can open to connect to NDN-Play
     # Port 8765 must be forwarded from the host running MiniNDN
     # to the machine running the browser
-    PlayServer(ndn.net)
+    PlayServer(ndn.net).start()
 
     ndn.stop()
