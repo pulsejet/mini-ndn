@@ -14,34 +14,50 @@ from minindn.play.consts import WSKeys, WSFunctions
 if TYPE_CHECKING:
     from minindn.play.term.term import TermExecutor
 
-class Pty:
-    id: str
-    name: str
-    master: int
-    stdin: BufferedWriter
+class PtyManager:
+    ptys = {}
     thread: Thread
-    slave: int
-    process: Optional[subprocess.Popen] = None
-    buffer: CircularByteBuffer
     executor: 'TermExecutor'
+    poller = select.poll()
 
     def __init__(self, executor):
-        self.master, self.slave = pty.openpty()
-        self.buffer = CircularByteBuffer(16000)
         self.executor = executor
+        self.thread = Thread(target=self.ui_out_pty_thread, args=(), daemon=True)
+        self.thread.start()
+
+    def register(self, pty: 'Pty'):
+        self.ptys[pty.master] = pty
+        self.poller.register(pty.master, select.POLLIN)
+
+    def unregister(self, pty: 'Pty'):
+        self.poller.unregister(pty.master)
+        pty.cleanup()
+        if pty.master in self.ptys:
+            del self.ptys[pty.master]
 
     # Send output to UI thread
     def ui_out_pty_thread(self):
-        poller = select.poll()
-        poller.register(self.master, select.POLLIN)
-        while not self.process or self.process.poll() is None:
-            if res := poller.poll(5):
+        while True:
+            # Check all processes
+            for pty in list(self.ptys.values()):
+                if pty.process is not None and pty.process.poll() is not None:
+                    self.unregister(pty)
+                    continue
+
+            # Check all file descriptors and block for 1/4 s
+            for (fd, status) in self.poller.poll(250):
+                if fd not in self.ptys:
+                    self.poller.unregister(fd)
+                    continue
+                pty = self.ptys[fd]
+
                 # Check if poller is closed
-                if res[0][1] == select.POLLHUP:
-                    break
+                if status == select.POLLHUP:
+                    self.unregister(pty)
+                    continue
 
                 # Find the number of bytes available to read
-                bytes_available = fcntl.ioctl(self.master, termios.FIONREAD, struct.pack('I', 0))
+                bytes_available = fcntl.ioctl(pty.master, termios.FIONREAD, struct.pack('I', 0))
                 bytes_available = struct.unpack('I', bytes_available)[0]
                 bytes_to_read = min(bytes_available, 4096)
 
@@ -49,28 +65,46 @@ class Pty:
                 if bytes_to_read == 0:
                     continue
 
-                # Read everything available
-                bytes = None
+                # Read everything available and send to UI
                 try:
-                    bytes = os.read(self.master, bytes_to_read)
-                except OSError as e:
-                    break
+                    bytes = os.read(pty.master, bytes_to_read)
+                    self.executor._send_pty_out(bytes, pty.id)
+                    pty.buffer.write(bytes)
+                except Exception as e:
+                    print(e)
+                    self.unregister(pty)
+                    continue
 
-                # Send to UI
-                self.executor._send_pty_out(bytes, self.id)
-                self.buffer.write(bytes)
+class Pty:
+    id: str
+    name: str
+    master: int
+    slave: int
+    stdin: BufferedWriter
+    buffer: CircularByteBuffer
+    executor: 'TermExecutor'
+    process: Optional[subprocess.Popen] = None
 
+    def __init__(self, executor, id: str, name: str):
+        self.master, self.slave = pty.openpty()
+        self.buffer = CircularByteBuffer(16000)
+        self.executor = executor
+        self.id = id
+        self.name = name
+        self.stdin = os.fdopen(self.master, 'wb')
+        executor.pty_list[id] = self
+
+    def cleanup(self):
         self.executor.socket.send_all(msgpack.dumps({
             WSKeys.MSG_KEY_FUN: WSFunctions.CLOSE_TERMINAL,
             WSKeys.MSG_KEY_ID: self.id,
         }))
 
-        os.close(self.master)
-        os.close(self.slave)
-        del self.executor.pty_list[self.id]
+        try:
+            os.close(self.master)
+            os.close(self.slave)
+        except OSError:
+            pass
 
-    def start(self):
-        self.executor.pty_list[self.id] = self
-        self.stdin = os.fdopen(self.master, 'wb')
-        self.thread = Thread(target=self.ui_out_pty_thread, args=(), daemon=True)
-        self.thread.start()
+        if self.id in self.executor.pty_list:
+            del self.executor.pty_list[self.id]

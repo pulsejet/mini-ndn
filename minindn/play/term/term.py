@@ -14,16 +14,18 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from minindn.play.consts import WSKeys, WSFunctions
 from minindn.play.socket import PlaySocket
-from minindn.play.term.pty import Pty
+from minindn.play.term.pty import Pty, PtyManager
 from minindn.util import getPopen
 import minindn.play.util as util
 
 class TermExecutor:
     pty_list: dict[str, Pty] = {}
+    pty_manager: 'PtyManager'
 
     def __init__(self, net: Mininet, socket: PlaySocket):
         self.net = net
         self.socket = socket
+        self.pty_manager = PtyManager(self)
 
     def start_cli(self):
         """UI Function: Start CLI"""
@@ -33,6 +35,8 @@ class TermExecutor:
                 self.parent = parent
 
             def write(self, msg: str):
+                if 'cli' not in self.parent.pty_list:
+                    return
                 mb = msg.encode('utf-8')
                 self.parent._send_pty_out(mb, "cli")
                 self.parent.pty_list["cli"].buffer.write(mb)
@@ -43,10 +47,8 @@ class TermExecutor:
         lg.addHandler(handler)
 
         # Create pty for cli
-        cpty = Pty(self)
-        cpty.id = "cli"
-        cpty.name = "MiniNDN CLI"
-        cpty.start()
+        cpty = Pty(self, "cli", "MiniNDN CLI")
+        self.pty_manager.register(cpty)
 
         # Start cli
         CLI.use_rawinput = False
@@ -55,10 +57,8 @@ class TermExecutor:
     def start_repl(self):
         """UI Function: Start REPL"""
 
-        cpty = Pty(self)
-        cpty.id = "repl"
-        cpty.name = "Python REPL"
-        cpty.start()
+        cpty = Pty(self, "repl", "Python REPL")
+        self.pty_manager.register(cpty)
 
         try:
             with os.fdopen(cpty.slave, 'w') as fout, os.fdopen(cpty.slave, 'r') as fin, redirect_stdout(fout), redirect_stderr(fout):
@@ -100,14 +100,13 @@ class TermExecutor:
                 f.write("\nexport PS1='\\[\\033[01;32m\\]\\u@{}\\[\\033[00m\\]:\\[\\033[01;34m\]\\w\\[\\033[00m\\]\\$ '\n".format(nodeId))
 
         # Create pty
-        cpty = Pty(self)
-        cpty.process = getPopen(
-            self.net[nodeId], 'bash --noprofile -i',
-            stdin=cpty.slave, stdout=cpty.slave, stderr=cpty.slave)
+        pty_id = nodeId + str(int(random.random() * 100000))
+        pty_name = "bash [{}]".format(nodeId)
+        cpty = Pty(self, pty_id, pty_name)
+        self.pty_manager.register(cpty)
 
-        cpty.id = nodeId + str(int(random.random() * 100000))
-        cpty.name = "bash [{}]".format(nodeId)
-        cpty.start()
+        # Start bash
+        cpty.process = getPopen(self.net[nodeId], 'bash --noprofile -i', stdin=cpty.slave, stdout=cpty.slave, stderr=cpty.slave)
 
         return self._open_term_response(cpty)
 
