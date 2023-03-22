@@ -1,4 +1,4 @@
-import os
+import fcntl, struct, termios, os
 import subprocess
 import select
 import msgpack
@@ -35,23 +35,30 @@ class Pty:
         poller = select.poll()
         poller.register(self.master, select.POLLIN)
         while not self.process or self.process.poll() is None:
-            if poller.poll(0):
-                bytes: Optional[bytearray] = None
-                while poller.poll(1):
-                    if not bytes:
-                        bytes = bytearray()
-                    if len(bytes) >= 4000: # safe MTU
-                        break
+            if res := poller.poll(5):
+                # Check if poller is closed
+                if res[0][1] == select.POLLHUP:
+                    break
 
-                    try:
-                        read_bytes = os.read(self.master, 1)
-                        bytes.append(read_bytes[0])
-                    except OSError:
-                        break
+                # Find the number of bytes available to read
+                bytes_available = fcntl.ioctl(self.master, termios.FIONREAD, struct.pack('I', 0))
+                bytes_available = struct.unpack('I', bytes_available)[0]
+                bytes_to_read = min(bytes_available, 4096)
 
-                if bytes:
-                    self.executor._send_pty_out(bytes, self.id)
-                    self.buffer.write(bytes)
+                # This should never really happen
+                if bytes_to_read == 0:
+                    continue
+
+                # Read everything available
+                bytes = None
+                try:
+                    bytes = os.read(self.master, bytes_to_read)
+                except OSError as e:
+                    break
+
+                # Send to UI
+                self.executor._send_pty_out(bytes, self.id)
+                self.buffer.write(bytes)
 
         self.executor.socket.send_all(msgpack.dumps({
             WSKeys.MSG_KEY_FUN: WSFunctions.CLOSE_TERMINAL,
