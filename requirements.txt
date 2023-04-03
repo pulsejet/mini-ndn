@@ -2,7 +2,3 @@ igraph
 setuptools
 tqdm
 joblib
-
-# Required for NDN-Play integration
-websockets
-msgpack
