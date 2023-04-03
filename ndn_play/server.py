@@ -16,7 +16,7 @@ class PlayServer:
     def __init__(self, net: Mininet, **kwargs) -> None:
         """
         Start NDN Play GUI server.
-        If cli=True is specified (default), will block for the MiniNDN CLI.
+        If cli=True is specified (default), will block for the Mininet CLI.
         """
 
         self.net = net
@@ -41,7 +41,7 @@ class PlayServer:
         for monitor in self.monitors:
             monitor.start(self.socket)
 
-        # Blocks until MiniNDN CLI is closed
+        # Blocks until Mininet CLI is closed
         if self.cli:
             self.pty_executor.start_cli()
 

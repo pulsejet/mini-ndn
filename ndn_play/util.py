@@ -2,13 +2,18 @@ import subprocess
 
 from mininet import node
 from mininet.net import Mininet
-from minindn.util import getPopen
 
 try:
     from mn_wifi import node as mn_wifi_node
     HAS_WIFI = True
 except ImportError:
     HAS_WIFI = False
+
+try:
+    from minindn.util import getPopen
+except ImportError:
+    def getPopen(host, cmd, **params):
+        return host.popen(cmd, cwd=host_home(host), **params)
 
 def is_valid_hostid(net: Mininet, nodeId: str):
     """Check if a nodeId is a host"""
@@ -35,6 +40,8 @@ def run_popen_readline(node, cmd):
             break
         yield line
 
-def host_home(node):
+def host_home(node) -> str | None:
     """Get home directory for host"""
+    if 'params' not in node.params or 'homeDir' not in node.params['params']:
+        return None
     return node.params['params']['homeDir']

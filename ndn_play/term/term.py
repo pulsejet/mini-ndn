@@ -46,7 +46,7 @@ class TermExecutor:
         lg.addHandler(handler)
 
         # Create pty for cli
-        cpty = Pty(self, "cli", "MiniNDN CLI")
+        cpty = Pty(self, "cli", "Mininet CLI")
         self.pty_manager.register(cpty)
 
         # Start cli
@@ -86,17 +86,21 @@ class TermExecutor:
         if not util.is_valid_hostid(self.net, nodeId):
             return
 
-        # Copy .bashrc to node
-        path = os.path.expanduser("~/.bashrc")
-        if os.path.isfile(path):
-            # Do this copy every time to make sure the file is up to date
-            target = util.host_home(self.net[nodeId]) + "/.bashrc"
-            shutil.copy(path, target)
+        # Get directory of node
+        node_home = util.host_home(self.net[nodeId])
 
-            # Append extra commands
-            with open(target, "a") as f:
-                # Shell prompt
-                f.write("\nexport PS1='\\[\\033[01;32m\\]\\u@{}\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n".format(nodeId))
+        # Copy .bashrc to node
+        if node_home is not None:
+            path = os.path.expanduser("~/.bashrc")
+            if os.path.isfile(path):
+                # Do this copy every time to make sure the file is up to date
+                target = node_home + "/.bashrc"
+                shutil.copy(path, target)
+
+                # Append extra commands
+                with open(target, "a") as f:
+                    # Shell prompt
+                    f.write("\nexport PS1='\\[\\033[01;32m\\]\\u@{}\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n".format(nodeId))
 
         # Create pty
         pty_id = nodeId + str(int(random.random() * 100000))

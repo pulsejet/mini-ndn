@@ -105,7 +105,7 @@ class TopoExecutor:
             val['isSwitch'] = True
 
         if hasattr(node, 'position'):
-            # MiniNDN positions are in m, NDN-Play are much smaller
+            # Mininet positions are in m, NDN-Play are much smaller
             val['x'] = node.position[0] * 10
             val['y'] = node.position[1] * 10
 
