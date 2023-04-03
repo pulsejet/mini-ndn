@@ -1,10 +1,10 @@
 from threading import Thread
-from minindn.play.monitor import LogMonitor
-from minindn.play.socket import PlaySocket
-from minindn.play.net.topo import TopoExecutor
-from minindn.play.net.state import StateExecutor
-from minindn.play.term.term import TermExecutor
-from minindn.play.shark.shark import SharkExecutor
+from .monitor import LogMonitor
+from .socket import PlaySocket
+from .net.topo import TopoExecutor
+from .net.state import StateExecutor
+from .term.term import TermExecutor
+from .shark.shark import SharkExecutor
 from mininet.net import Mininet
 
 class PlayServer:

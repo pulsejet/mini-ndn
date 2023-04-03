@@ -5,9 +5,9 @@ from time import sleep
 from io import TextIOWrapper
 from threading import Thread
 from mininet.node import Node
-from minindn.play.socket import PlaySocket
-from minindn.play.consts import WSKeys, WSFunctions
-import minindn.play.util as util
+from .socket import PlaySocket
+from .consts import WSKeys, WSFunctions
+from . import util
 
 class LogMonitor:
     nodes: list[Node]

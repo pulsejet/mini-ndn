@@ -1,10 +1,8 @@
 from mininet.net import Mininet
-from mininet.log import info, debug, error
+from mininet.log import info, error
 from mininet.link import Link
 
 class TopoExecutor:
-    net: Mininet = None
-
     def __init__(self, net: Mininet):
         self.net = net
 
@@ -20,7 +18,7 @@ class TopoExecutor:
             nodes.append(self._node_dict(switch, switch=True))
 
         if hasattr(self.net, 'stations'):
-            for station in self.net.stations:
+            for station in getattr(self.net, 'stations'):
                 nodes.append(self._node_dict(station))
 
         for link in self.net.links:
@@ -143,7 +141,7 @@ class TopoExecutor:
 
         return obj
 
-    def _get_link(self, a, b, mnId) -> Link:
+    def _get_link(self, a, b, mnId) -> Link | None:
         """Helper: get link between two nodes by name"""
         for link in self.net.linksBetween(self.net[a], self.net[b]):
             if str(link) == mnId:

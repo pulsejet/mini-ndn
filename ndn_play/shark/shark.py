@@ -5,9 +5,9 @@ from threading import Thread
 
 from mininet.net import Mininet
 from mininet.log import error
-from minindn.play.socket import PlaySocket
-from minindn.play.consts import Config, WSFunctions, WSKeys
-import minindn.play.util as util
+from ..socket import PlaySocket
+from ..consts import Config, WSFunctions, WSKeys
+from .. import util
 
 # TShark fields
 SHARK_FIELDS = [
@@ -23,9 +23,6 @@ SHARK_FIELDS = [
 SHARK_FIELDS_STR = " -Tfields -e " + " -e ".join(SHARK_FIELDS) + " -Y ndn.len"
 
 class SharkExecutor:
-    net: Mininet = None
-    socket: PlaySocket = None
-
     def __init__(self, net: Mininet, socket: PlaySocket):
         self.net = net
         self.socket = socket

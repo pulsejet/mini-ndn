@@ -8,11 +8,11 @@ from io import BufferedWriter
 from threading import Thread
 from typing import Optional, TYPE_CHECKING
 
-from minindn.play.term.cbuf import CircularByteBuffer
-from minindn.play.consts import WSKeys, WSFunctions
+from ..term.cbuf import CircularByteBuffer
+from ..consts import WSKeys, WSFunctions
 
 if TYPE_CHECKING:
-    from minindn.play.term.term import TermExecutor
+    from ..term.term import TermExecutor
 
 class PtyManager:
     ptys = {}

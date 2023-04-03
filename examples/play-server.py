@@ -27,7 +27,7 @@ from minindn.minindn import Minindn
 from minindn.apps.app_manager import AppManager
 from minindn.apps.nfd import Nfd
 from minindn.apps.tshark import Tshark
-from minindn.play.server import PlayServer
+from ndn_play.server import PlayServer
 
 if __name__ == '__main__':
     setLogLevel('info')

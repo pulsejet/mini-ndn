@@ -6,15 +6,15 @@ import msgpack
 import secrets
 import time
 
+from .consts import Config, WSKeys
+from mininet.log import error
+
 from threading import Thread
-from minindn.play.consts import Config, WSKeys
-from mininet.log import info, debug, error
 
 class PlaySocket:
-    loop: asyncio.AbstractEventLoop = None
     conn_list: dict = {}
     executors: list = []
-    AUTH_TOKEN: str = None
+    AUTH_TOKEN: str | None = None
 
     def __init__(self):
         """Initialize the PlaySocket.

@@ -12,11 +12,10 @@ from code import InteractiveConsole
 
 from mininet.net import Mininet
 from mininet.cli import CLI
-from minindn.play.consts import WSKeys, WSFunctions
-from minindn.play.socket import PlaySocket
-from minindn.play.term.pty import Pty, PtyManager
-from minindn.util import getPopen
-import minindn.play.util as util
+from ..consts import WSKeys, WSFunctions
+from ..socket import PlaySocket
+from ..term.pty import Pty, PtyManager
+from .. import util
 
 class TermExecutor:
     pty_list: dict[str, Pty] = {}
@@ -97,7 +96,7 @@ class TermExecutor:
             # Append extra commands
             with open(target, "a") as f:
                 # Shell prompt
-                f.write("\nexport PS1='\\[\\033[01;32m\\]\\u@{}\\[\\033[00m\\]:\\[\\033[01;34m\]\\w\\[\\033[00m\\]\\$ '\n".format(nodeId))
+                f.write("\nexport PS1='\\[\\033[01;32m\\]\\u@{}\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\n".format(nodeId))
 
         # Create pty
         pty_id = nodeId + str(int(random.random() * 100000))
@@ -106,7 +105,7 @@ class TermExecutor:
         self.pty_manager.register(cpty)
 
         # Start bash
-        cpty.process = getPopen(self.net[nodeId], 'bash --noprofile -i', stdin=cpty.slave, stdout=cpty.slave, stderr=cpty.slave)
+        cpty.process = util.getPopen(self.net[nodeId], 'bash --noprofile -i', stdin=cpty.slave, stdout=cpty.slave, stderr=cpty.slave)
 
         return self._open_term_response(cpty)
 

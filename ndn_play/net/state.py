@@ -1,9 +1,7 @@
 from mininet.net import Mininet
-import minindn.play.util as util
+from .. import util
 
 class StateExecutor:
-    net: Mininet = None
-
     def __init__(self, net: Mininet):
         self.net = net
 
