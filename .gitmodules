@@ -1,0 +1,3 @@
+[submodule "minindn_play"]
+	path = minindn_play
+	url = https://github.com/pulsejet/minindn_play
